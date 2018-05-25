@@ -1,6 +1,6 @@
+use serde_json::value::Value;
 use std::fmt;
 use url::form_urlencoded;
-use serde_json::value::Value;
 
 #[derive(Debug)]
 pub enum ViewResult {
@@ -66,7 +66,10 @@ const PARAM_ENDKEY_OFFSET: usize = 12;
 const PARAM_ENDKEYDOCID_OFFSET: usize = 13;
 const PARAM_KEY_OFFSET: usize = 14;
 
-const NUM_PARAMS: usize = 15;
+const PARAM_STARTRANGE_OFFSET: usize = 15;
+const PARAM_ENDRANGE_OFFSET: usize = 16;
+
+const NUM_PARAMS: usize = 17;
 
 pub struct ViewQuery {
     design: String,
@@ -162,6 +165,17 @@ impl ViewQuery {
         S: Into<String>,
     {
         self.params[PARAM_ENDKEYDOCID_OFFSET] = Some(("endkey_docid", format!("{}", id.into())));
+        self
+    }
+
+    pub fn start_range(mut self, start: Value) -> ViewQuery {
+        self.params[PARAM_STARTRANGE_OFFSET] =
+            Some(("start_range", format!("{}", start.to_string())));
+        self
+    }
+
+    pub fn end_range(mut self, end: Value) -> ViewQuery {
+        self.params[PARAM_ENDRANGE_OFFSET] = Some(("end_range", format!("{}", end.to_string())));
         self
     }
 
@@ -370,4 +384,14 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_startrange_and_endrange() {
+        assert_eq!(
+            "start_range=%5B46.1%2C11.11%5D&end_range=%5B46.18%2C11.18%5D",
+            ViewQuery::from("a", "b")
+                .start_range(json!([46.10, 11.11]))
+                .end_range(json!([46.18, 11.18]))
+                .params()
+        );
+    }
 }
