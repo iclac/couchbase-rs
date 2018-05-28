@@ -1,22 +1,24 @@
 //! Bucket-level operations and API.
 #![allow(non_upper_case_globals)]
 
-use std::ptr;
 use couchbase_sys::*;
-use std::sync::Arc;
+use futures::channel::mpsc::{unbounded, UnboundedSender};
+use futures::channel::oneshot::channel;
 use parking_lot::Mutex;
+use serde_json;
+use std;
+use std::ffi::CString;
+use std::mem;
+use std::ptr;
+use std::slice;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::thread;
 use std::thread::{park, JoinHandle};
-use std::sync::atomic::{AtomicBool, Ordering};
-use futures::channel::oneshot::channel;
-use futures::channel::mpsc::{unbounded, UnboundedSender};
-use {CouchbaseError, CouchbaseFuture, CouchbaseStream, Document, N1qlResult, N1qlRow, ViewMeta,
-     ViewQuery, ViewResult, ViewRow};
-use std;
-use std::slice;
-use std::mem;
-use serde_json;
-use std::ffi::CString;
+use {
+    CouchbaseError, CouchbaseFuture, CouchbaseStream, Document, N1qlResult, N1qlRow, ViewMeta,
+    ViewQuery, ViewResult, ViewRow,
+};
 
 type StreamSender<T> = *mut UnboundedSender<Result<T, CouchbaseError>>;
 
@@ -340,6 +342,10 @@ impl Bucket {
         let coptions = CString::new(query.params()).unwrap();
 
         let mut cmd: lcb_CMDVIEWQUERY = unsafe { ::std::mem::zeroed() };
+        if query.is_spatial() {
+            cmd.cmdflags |= LCB_CMDVIEWQUERY_F_SPATIAL;
+        }
+
         let tx_boxed = Box::new(tx);
         unsafe {
             lcb_view_query_initcmd(

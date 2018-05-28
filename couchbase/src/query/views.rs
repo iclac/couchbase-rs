@@ -75,6 +75,7 @@ pub struct ViewQuery {
     design: String,
     view: String,
     development: bool,
+    is_spatial: bool,
     params: Vec<Option<(&'static str, String)>>,
 }
 
@@ -87,6 +88,7 @@ impl ViewQuery {
             design: design.into(),
             view: view.into(),
             development: false,
+            is_spatial: false,
             params: vec![None; NUM_PARAMS],
         }
     }
@@ -98,6 +100,15 @@ impl ViewQuery {
 
     pub fn is_development(&self) -> bool {
         self.development
+    }
+
+    pub fn spatial(mut self, spatial: bool) -> ViewQuery {
+        self.is_spatial = spatial;
+        self
+    }
+
+    pub fn is_spatial(&self) -> bool {
+        self.is_spatial
     }
 
     pub fn reduce(mut self, reduce: bool) -> ViewQuery {
