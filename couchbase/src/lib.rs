@@ -54,21 +54,21 @@ extern crate serde;
 extern crate url;
 #[macro_use]
 extern crate serde_derive;
-#[macro_use]
+
 extern crate serde_json;
 
 pub mod bucket;
 pub mod cluster;
+mod connstr;
 pub mod document;
-pub mod sync;
 pub mod error;
 pub mod query;
-mod connstr;
+pub mod sync;
 
-pub use document::{BinaryDocument, Document, JsonDocument};
 pub use bucket::Bucket;
 pub use cluster::Cluster;
-pub use sync::{CouchbaseFuture, CouchbaseStream};
+pub use document::{BinaryDocument, Document, JsonDocument};
 pub use error::CouchbaseError;
 pub use query::n1ql::{N1qlMeta, N1qlResult, N1qlRow};
 pub use query::views::{ViewMeta, ViewQuery, ViewResult, ViewRow};
+pub use sync::{CouchbaseFuture, CouchbaseStream};
