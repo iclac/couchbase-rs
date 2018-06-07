@@ -1,9 +1,9 @@
 //! Everything regarding Documents and their usage.
-use std::str::{Utf8Error, from_utf8};
-use std::fmt;
-use serde::ser::Serialize;
 use serde::de::DeserializeOwned;
+use serde::ser::Serialize;
 use serde_json::{from_slice, to_string, to_vec};
+use std::fmt;
+use std::str::{from_utf8, Utf8Error};
 
 pub trait Document {
     type Content;
@@ -87,7 +87,8 @@ impl Document for BinaryDocument {
 
 impl fmt::Debug for BinaryDocument {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let content = self.content
+        let content = self
+            .content
             .as_ref()
             .map(|c| from_utf8(c).unwrap_or("<not utf8 decodable>"));
         write!(
@@ -149,10 +150,18 @@ where
     where
         S: Into<String>,
     {
+        let c: Option<T> = match content {
+            Some(v) => match from_slice(&v) {
+                Ok(t) => Some(t),
+                Err(_e) => None,
+            },
+            None => None,
+        };
+
         Self {
             id: id.into(),
             cas: cas,
-            content: content.map(|v| from_slice(&v).unwrap()),
+            content: c,
             expiry: expiry,
         }
     }
