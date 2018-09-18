@@ -1,9 +1,9 @@
 //! Bucket-level operations and API.
 #![allow(non_upper_case_globals)]
 
+use tokio_channel::mpsc::{unbounded, UnboundedSender};
+use tokio_channel::oneshot::channel;
 use couchbase_sys::*;
-use futures::channel::mpsc::{unbounded, UnboundedSender};
-use futures::channel::oneshot::channel;
 use parking_lot::Mutex;
 use serde_json;
 use std;

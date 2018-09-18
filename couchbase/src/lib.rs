@@ -48,7 +48,10 @@
 extern crate couchbase_sys;
 #[macro_use]
 extern crate log;
-extern crate futures;
+
+extern crate tokio;
+extern crate tokio_channel;
+
 extern crate parking_lot;
 extern crate serde;
 extern crate url;

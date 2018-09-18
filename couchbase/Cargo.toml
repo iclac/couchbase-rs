@@ -14,7 +14,11 @@ documentation = "https://docs.rs/couchbase"
 couchbase-sys = { version = "0.4.0", path = "../couchbase-sys" }
 
 url = "1.7"
-futures-preview = "0.3.0-alpha.3"
+
+# futures-preview = "0.3.0-alpha.3"
+tokio = "0.1.8"
+tokio-channel = "0.1.0"
+
 parking_lot = "0.5"
 log = "0.4"
 

@@ -1,16 +1,17 @@
+
 //! Synchronization and Future/Stream abstractions.
-use futures::{Async, Future, Stream};
-use futures::channel::oneshot::Receiver;
-use futures::channel::mpsc::UnboundedReceiver;
+use tokio::prelude::*;
+
+use tokio_channel::mpsc;
+use tokio_channel::oneshot;
 use error::CouchbaseError;
-use futures::task::Context;
 
 pub struct CouchbaseFuture<T> {
-    inner: Receiver<Result<T, CouchbaseError>>,
+    inner: oneshot::Receiver<Result<T, CouchbaseError>>,
 }
 
 impl<T> CouchbaseFuture<T> {
-    pub fn new(rx: Receiver<Result<T, CouchbaseError>>) -> Self {
+    pub fn new(rx: oneshot::Receiver<Result<T, CouchbaseError>>) -> Self {
         CouchbaseFuture { inner: rx }
     }
 }
@@ -19,12 +20,12 @@ impl<T: Send + 'static> Future for CouchbaseFuture<T> {
     type Item = T;
     type Error = CouchbaseError;
 
-    fn poll(&mut self, cx: &mut Context) -> Result<Async<Self::Item>, Self::Error> {
+    fn poll(&mut self) -> Result<Async<Self::Item>, Self::Error> {
         match self.inner
-            .poll(cx)
+            .poll()
             .expect("CouchbaseFuture shouldn't be canceled!")
         {
-            Async::Pending => Ok(Async::Pending),
+            Async::NotReady => Ok(Async::NotReady),
             Async::Ready(Err(e)) => Err(e),
             Async::Ready(Ok(e)) => Ok(e.into()),
         }
@@ -32,11 +33,11 @@ impl<T: Send + 'static> Future for CouchbaseFuture<T> {
 }
 
 pub struct CouchbaseStream<T> {
-    inner: UnboundedReceiver<Result<T, CouchbaseError>>,
+    inner: mpsc::Receiver<Result<T, CouchbaseError>>,
 }
 
 impl<T> CouchbaseStream<T> {
-    pub fn new(rx: UnboundedReceiver<Result<T, CouchbaseError>>) -> Self {
+    pub fn new(rx: mpsc::Receiver<Result<T, CouchbaseError>>) -> Self {
         CouchbaseStream { inner: rx }
     }
 }
@@ -45,15 +46,15 @@ impl<T: Send + 'static> Stream for CouchbaseStream<T> {
     type Item = T;
     type Error = CouchbaseError;
 
-    fn poll_next(&mut self, cx: &mut Context) -> Result<Async<Option<Self::Item>>, Self::Error> {
+    fn poll(&mut self) -> Result<Async<Option<Self::Item>>, Self::Error> {
         match self.inner
-            .poll_next(cx)
+            .poll()
             .expect("CouchbaseStream shouldn't be canceled!")
         {
-            Async::Pending => Ok(Async::Pending),
+            Async::NotReady => Ok(Async::NotReady),
             Async::Ready(Some(Ok(e))) => Ok(Async::Ready(Some(e))),
             Async::Ready(Some(Err(e))) => Err(e),
-            Async::Ready(None) => Ok(Async::Ready(None)),
+            Async::Ready(None) => Ok(Async::Ready(None))
         }
     }
 }
